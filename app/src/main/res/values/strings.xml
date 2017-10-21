@@ -1,0 +1,96 @@
+<resources>
+    <string name="app_name">Button test</string>
+    <string name="forgot">Disconnect</string>
+    <string name="multimeter">Multimeter</string>
+    <string name="dso">DSO</string>
+    <string name="signal_generator">Signal Generator</string>
+    <string name="omega">Ω</string>
+    <string name="generate">GENERATE</string>
+    <string name="signal_type">Signal type</string>
+    <string name="frequency">Frequency</string>
+    <string name="screenshots">Screenshots</string>
+    <string name="hz">Hz</string>
+    <string name="khz">kHz</string>
+    <string name="mhz">MHz</string>
+    <string name="square_wave">Square Wave</string>
+    <string name="sine_wave">Sine Wave</string>
+
+    <string name="title_connecting">Connecting to</string>
+
+    <string name="none_found">No devices found</string>
+    <string name="screenshot_saved">Screenshot saved</string>
+    <string name="date_time_sdf">yyyy-MM-dd-hh-mm-ss</string>
+    <string name="image_path_intent">image_path</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="terminate">TERMINATE</string>
+    <string name="empty_frequency">Empty frequency!</string>
+    <string name="arduino_vhart">Arduino chart</string>
+    <string name="wait_while_connection_was_established">Please wait</string>
+    <string name="max_frequency4">Maximum frequency is 1MHz</string>
+    <string name="no_data_available">No data available</string>
+
+    <string name="duty_cycle">Duty cycle %</string>
+    <string name="pwm">PWM</string>
+    <string name="must_be_less_than">Must be less than 100!</string>
+    <string name="must_be_not_empty">Must be not empty!</string>
+    <string name="bt_service_started">Bluetooth service started</string>
+    <string name="reset">Reset</string>
+    <string name="a">A</string>
+    <string name="v_low">v</string>
+    <string name="user_manual">User Manual</string>
+    <string name="receiving_data">Receiving data</string>
+    <string name="please_wait">Please wait…</string>
+    <string name="failed_to_open_file">Failed to open Manual file</string>
+    <string name="snapshot">Snapshot</string>
+    <string name="auto_refresh">Auto Refresh</string>
+    <string name="refresh_rate">Refresh rate (mS)</string>
+    <string name="empty_refresh_rate">Empty refresh rate value</string>
+    <string name="refresh_cannot_be_zero">Refresh rate cannot be 0</string>
+    <string name="value">Value</string>
+    <string name="time">Time</string>
+    <string name="current">Current</string>
+    <string name="resistance">Resistance</string>
+    <string name="voltage">Voltage</string>
+    <string name="exported_data">Exported data</string>
+    <string name="export">Export</string>
+    <string name="save_to_google_drive">Save to Google Drive</string>
+    <string name="send_via_e_mail">Send via e-mail</string>
+    <string name="send_email">Send email…</string>
+    <string name="google_drive_not_found">Google Drive application not found</string>
+    <string name="no_applications">No application than can perform this action</string>
+    <string name="make_sure_module_is_enabled">Make sure Current is selected on the Module!</string>
+    <string name="ok">OK</string>
+    <string name="undefined">~</string>
+    <string name="v_p_p">V p-p:</string>
+    <string name="f_">f:</string>
+    <string name="date">Date</string>
+    <string name="sct">SCT</string>
+    <string name="current_rate">Current rate</string>
+    <string name="refresh_rate_short">Refresh rate</string>
+    <string name="set">Set</string>
+    <string name="_0_00">0.00</string>
+    <string name="status">Status:</string>
+    <string name="connected">Connected</string>
+    <string name="failed_to_connect">Failed to connect</string>
+    <string name="connecting">Connecting…</string>
+    <string name="modules">Modules</string>
+    <string name="please_select_module_to_continue">Please select Module to continue</string>
+    <string name="refresh">Refresh</string>
+    <string name="send_data_file">Send data file</string>
+    <string name="send">Send</string>
+    <string name="n_a">n/a</string>
+    <string name="enter_your_number">Enter your number</string>
+    <string name="f_n_a">f: n/a</string>
+    <string name="v_p_p_n_a">V p-p: n/a</string>
+    <string name="send_screenshot">Send screenshot</string>
+    <string name="are_you_sure_disconnect">Are you sure, you want to disconnect</string>
+    <string name="back_button">Back button</string>
+    <string name="take_screenshot">Take screenshot</string>
+
+    <array name="share_options">
+        <item>@string/save_to_google_drive</item>
+        <item>@string/send_via_e_mail</item>
+    </array>
+</resources>
