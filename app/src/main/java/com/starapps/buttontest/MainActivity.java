@@ -13,16 +13,33 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.TimePicker;
 
 import com.starapps.buttontest.connecting.StartActivity;
 import com.starapps.buttontest.core.BluetoothService;
+import com.starapps.buttontest.core.ConnectionStatus;
 import com.starapps.buttontest.core.Constants;
+import com.starapps.buttontest.core.QueueItem;
 import com.starapps.buttontest.core.QueueManager;
+import com.starapps.buttontest.core.StatusRequest;
 import com.starapps.buttontest.databinding.ActivityMainBinding;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_ENABLE_BT_AUTO = 16;
+    private static final DateFormat HOUR_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
+
+    private int mHour;
+    private int mMinute;
 
     private ActivityMainBinding binding;
     private BluetoothAdapter mBtAdapter;
@@ -30,12 +47,55 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        initTime();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         initActionBar();
         startService(new Intent(this, BluetoothService.class));
+        updateTimeView();
 
-        binding.digitalIn.setOnClickListener(view -> startActivity(new Intent(this, DigitalActivity.class)));
+        binding.timePickerView.setIs24HourView(true);
+        binding.timePickerView.setOnTimeChangedListener((view, hourOfDay, minute) -> {
+            mHour = hourOfDay;
+            mMinute = minute;
+            updateTimeView();
+        });
+        binding.sendButton.setOnClickListener(v -> sendTime());
+    }
+
+    private Calendar getCalendar() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar;
+    }
+
+    private void sendTime() {
+        new Thread(() -> {
+            Calendar calendar = getCalendar();
+            calendar.set(Calendar.HOUR_OF_DAY, mHour);
+            calendar.set(Calendar.MINUTE, mMinute);
+            try {
+                QueueManager.getInstance().insert(new QueueItem(HOUR_FORMAT.format(calendar.getTime()).getBytes("UTF-8")));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void updateTimeView() {
+        Calendar calendar = getCalendar();
+        calendar.set(Calendar.HOUR_OF_DAY, mHour);
+        calendar.set(Calendar.MINUTE, mMinute);
+        binding.selectedTimeView.setText(HOUR_FORMAT.format(calendar.getTime()));
+    }
+
+    private void initTime() {
+        Calendar calendar = getCalendar();
+        mHour = calendar.get(Calendar.HOUR_OF_DAY);
+        mMinute = calendar.get(Calendar.MINUTE);
     }
 
     private void initActionBar() {
@@ -65,6 +125,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBus.getDefault().unregister(this);
+        QueueManager.getInstance().clearQueue();
         stopService(new Intent(this, BluetoothService.class));
     }
 
@@ -130,5 +192,20 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.dismiss());
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        EventBus.getDefault().post(new StatusRequest());
+    }
+
+    @Subscribe
+    public void onEvent(ConnectionStatus event) {
+        if (event.isConnected()) {
+            binding.statusView.setText("Connected");
+        } else {
+            binding.statusView.setText("Connecting...");
+        }
     }
 }

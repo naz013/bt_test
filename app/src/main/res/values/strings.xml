@@ -88,6 +88,7 @@
     <string name="are_you_sure_disconnect">Are you sure, you want to disconnect</string>
     <string name="back_button">Back button</string>
     <string name="take_screenshot">Take screenshot</string>
+    <string name="synchronize_time">Synchronize time</string>
 
     <array name="share_options">
         <item>@string/save_to_google_drive</item>

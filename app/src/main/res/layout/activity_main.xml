@@ -1,31 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <android.support.v7.widget.CardView
+        <TimePicker
+            android:id="@+id/time_picker_view"
             android:layout_width="match_parent"
-            android:layout_height="112dp"
-            app:cardBackgroundColor="@color/dsoPrimary"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="6dp">
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <Button
-                android:id="@+id/digital_in"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:drawableLeft="@drawable/ic_chart_areaspline"
-                android:padding="32dp"
-                android:text="Digital In"
-                android:textColor="@color/colorWhite"
-                android:textSize="20sp" />
+        <TextView
+            android:id="@+id/selected_time_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            tools:text="11:34:00" />
 
-        </android.support.v7.widget.CardView>
+        <Button
+            android:id="@+id/send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:text="@string/synchronize_time" />
+
+        <TextView
+            android:id="@+id/status_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Status" />
     </LinearLayout>
 </layout>
