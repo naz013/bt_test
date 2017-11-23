@@ -12,14 +12,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -27,9 +24,13 @@ import android.view.View;
 
 import com.starapps.buttontest.MainActivity;
 import com.starapps.buttontest.R;
-import com.starapps.buttontest.core.ConnectionManager;
+import com.starapps.buttontest.core.BluetoothService;
+import com.starapps.buttontest.core.ConnectionStatus;
 import com.starapps.buttontest.core.Constants;
 import com.starapps.buttontest.core.DeviceData;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.Set;
 
@@ -47,7 +48,6 @@ public class StartActivity extends AppCompatActivity {
     private ProgressDialog mDialog;
 
     private DevicesRecyclerAdapter mRecyclerAdapter;
-    private ConnectionManager mBtService = null;
     private BluetoothAdapter mBtAdapter;
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -60,6 +60,7 @@ public class StartActivity extends AppCompatActivity {
             }
         }
     };
+    private boolean isMoveForward = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,37 +136,6 @@ public class StartActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    private final Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            splitByMessageType(msg);
-        }
-    };
-
-    private void splitByMessageType(Message msg) {
-        switch (msg.what) {
-            case Constants.MESSAGE_STATE_CHANGE:
-                obtainConnectionMessage(msg);
-                break;
-        }
-    }
-
-    private void obtainConnectionMessage(Message msg) {
-        switch (msg.arg1) {
-            case ConnectionManager.STATE_CONNECTED:
-                hideDialog();
-                saveBtDevice(mDeviceAddress);
-                openApplication();
-                break;
-            case ConnectionManager.STATE_CONNECTING:
-                mDialog = ProgressDialog.show(this, getString(R.string.title_connecting),
-                        mDeviceName, true, true);
-                break;
-            case ConnectionManager.STATE_NONE:
-                break;
-        }
-    }
-
     private void hideDialog() {
         if (mDialog != null && mDialog.isShowing()) {
             mDialog.dismiss();
@@ -194,12 +164,6 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
-    private void stopBtService() {
-        if (mBtService != null) {
-            mBtService.stop();
-        }
-    }
-
     private final DeviceClickListener mListener = new DeviceClickListener() {
         @Override
         public void onClick(View view, int position) {
@@ -211,26 +175,14 @@ public class StartActivity extends AppCompatActivity {
         }
     };
 
-    private void stopConnection() {
-        if (mBtService != null) {
-            mBtService.stop();
-            mBtService = null;
-        }
-    }
-
     private void setupConnector(BluetoothDevice connectedDevice) {
-        stopConnection();
-        try {
-            String emptyName = "None";
-            DeviceData data = new DeviceData(connectedDevice, emptyName);
-            mBtService = new ConnectionManager(data, mHandler);
-            mBtService.connect();
-        } catch (IllegalArgumentException e) {
-            Log.d("TAG", "setupConnector failed: " + e.getMessage());
-        }
+        DeviceData data = new DeviceData(connectedDevice, "None");
+        EventBus.getDefault().post(new ConnectEvent(data));
     }
 
     private void openApplication() {
+        if (isMoveForward) return;
+        this.isMoveForward = true;
         startActivity(new Intent(StartActivity.this, MainActivity.class));
         finish();
     }
@@ -253,9 +205,27 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
+    @Subscribe
+    public void onEvent(ConnectionStatus event) {
+        if (event.isConnected()) {
+            hideDialog();
+            saveBtDevice(mDeviceAddress);
+            openApplication();
+        }
+    }
+
+    @Subscribe
+    public void onEvent(ConnectingEvent event) {
+        if (event.isConnecting) {
+            mDialog = ProgressDialog.show(this, getString(R.string.title_connecting),
+                    mDeviceName, true, true);
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
+        EventBus.getDefault().register(this);
         if (!mBtAdapter.isEnabled()) {
             requestBtEnabling(REQUEST_ENABLE_BT_AUTO);
         }
@@ -264,9 +234,10 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopBtService();
         cancelDiscovering();
         this.unregisterReceiver(mReceiver);
+        EventBus.getDefault().unregister(this);
+        if (!isMoveForward) stopService(new Intent(this, BluetoothService.class));
     }
 
     @Override

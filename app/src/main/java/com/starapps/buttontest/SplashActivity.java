@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.starapps.buttontest.connecting.StartActivity;
+import com.starapps.buttontest.core.BluetoothService;
 import com.starapps.buttontest.core.Constants;
 
 public class SplashActivity extends AppCompatActivity {
@@ -20,6 +21,7 @@ public class SplashActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        startService(new Intent(this, BluetoothService.class));
         selectScreen();
         finish();
     }

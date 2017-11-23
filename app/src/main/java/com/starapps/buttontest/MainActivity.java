@@ -13,8 +13,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.TimePicker;
 
+import com.starapps.buttontest.connecting.DisconnectEvent;
 import com.starapps.buttontest.connecting.StartActivity;
 import com.starapps.buttontest.core.BluetoothService;
 import com.starapps.buttontest.core.ConnectionStatus;
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private BluetoothAdapter mBtAdapter;
+    private boolean isMoveNext = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
         initActionBar();
-        startService(new Intent(this, BluetoothService.class));
         updateTimeView();
 
         binding.timePickerView.setIs24HourView(true);
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
         QueueManager.getInstance().clearQueue();
-        stopService(new Intent(this, BluetoothService.class));
+        if (!isMoveNext) stopService(new Intent(this, BluetoothService.class));
     }
 
     @Override
@@ -145,6 +145,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void removeBtDevice() {
+        isMoveNext = true;
+        EventBus.getDefault().post(new DisconnectEvent());
         removePrefs();
         startActivity(new Intent(getApplicationContext(), StartActivity.class));
         finish();

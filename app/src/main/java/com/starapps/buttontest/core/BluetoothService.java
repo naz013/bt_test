@@ -14,6 +14,9 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.starapps.buttontest.R;
+import com.starapps.buttontest.connecting.ConnectEvent;
+import com.starapps.buttontest.connecting.ConnectingEvent;
+import com.starapps.buttontest.connecting.DisconnectEvent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -35,7 +38,7 @@ public class BluetoothService extends Service {
                     obtainConnectionMessage(msg);
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
-                    EventBus.getDefault().post(new ConnectionStatus(true));
+                    postStatus(true);
                     break;
                 case Constants.MESSAGE_READ:
                     String message = (String) msg.obj;
@@ -49,13 +52,12 @@ public class BluetoothService extends Service {
     private static void obtainConnectionMessage(Message msg) {
         switch (msg.arg1) {
             case ConnectionManager.STATE_CONNECTING:
+                EventBus.getDefault().post(new ConnectingEvent(true));
             case ConnectionManager.STATE_NONE:
-                isConnected = false;
-                EventBus.getDefault().post(new ConnectionStatus(false));
+                postStatus(false);
                 break;
             case ConnectionManager.STATE_CONNECTED: {
-                isConnected = true;
-                EventBus.getDefault().post(new ConnectionStatus(true));
+                postStatus(false);
                 QueueManager.getInstance().deQueue();
                 break;
             }
@@ -72,7 +74,23 @@ public class BluetoothService extends Service {
 
     @Subscribe
     public void onEvent(StatusRequest request) {
-        EventBus.getDefault().post(new ConnectionStatus(isConnected));
+        postStatus(isConnected);
+    }
+
+    @Subscribe
+    public void onEvent(ConnectEvent event) {
+        try {
+            mBtService = new ConnectionManager(event.getDeviceData(), mHandler);
+            mBtService.connect();
+            QueueManager.getInstance().setManager(mBtService);
+        } catch (IllegalArgumentException e) {
+            Log.d("TAG", "setupConnector failed: " + e.getMessage());
+        }
+    }
+
+    @Subscribe
+    public void onEvent(DisconnectEvent event) {
+        if (isConnected) mBtService.stop();
     }
 
     @Override
@@ -126,11 +144,16 @@ public class BluetoothService extends Service {
         }
     }
 
+    private static void postStatus(boolean status) {
+        isConnected = status;
+        EventBus.getDefault().post(new ConnectionStatus(status));
+    }
+
     private void stopConnection() {
         if (mBtService != null) {
             mBtService.stop();
             mBtService = null;
         }
-        EventBus.getDefault().post(new ConnectionStatus(false));
+        postStatus(false);
     }
 }
