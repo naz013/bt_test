@@ -29,13 +29,14 @@ public class ConnectionManager {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
+    private int retryCount = 0;
 
     public ConnectionManager(DeviceData deviceData, Handler handler) {
         mHandler = handler;
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         connectedDevice = btAdapter.getRemoteDevice(deviceData.getAddress());
         deviceName = (deviceData.getName() == null) ? deviceData.getAddress() : deviceData.getName();
-        mState = STATE_NONE;
+        setState(STATE_NONE);
     }
 
     private synchronized void setState(int state) {
@@ -81,29 +82,32 @@ public class ConnectionManager {
             mConnectedThread = null;
         }
         setState(STATE_CONNECTED);
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME, deviceName);
-        mHandler.sendMessage(msg);
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
+        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME, deviceName);
+        mHandler.sendMessage(msg);
+        retryCount = 0;
     }
 
-    public synchronized void stop() {
+    public synchronized void stop(boolean stopThreads) {
         if (D) Log.d(TAG, "stop");
-
-        if (mConnectThread != null) {
-            if (D) Log.d(TAG, "cancel mConnectThread");
-            mConnectThread.cancel();
-            mConnectThread = null;
-        }
-        if (mConnectedThread != null) {
-            if (D) Log.d(TAG, "cancel mConnectedThread");
-            mConnectedThread.cancel();
-            mConnectedThread = null;
+        if (stopThreads) {
+            if (mConnectThread != null) {
+                if (D) Log.d(TAG, "cancel mConnectThread");
+                mConnectThread.cancel();
+                mConnectThread = null;
+            }
+            if (mConnectedThread != null) {
+                if (D) Log.d(TAG, "cancel mConnectedThread");
+                mConnectedThread.cancel();
+                mConnectedThread = null;
+            }
         }
         setState(STATE_NONE);
     }
 
     public void writeMessage(byte[] data) {
+        if (D) Log.d(TAG, "writeMessage: " + mConnectedThread);
         ConnectedThread r;
         synchronized (this) {
             if (mState != STATE_CONNECTED) return;
@@ -120,9 +124,14 @@ public class ConnectionManager {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
         setState(STATE_NONE);
+        if (retryCount < 5) {
+            connect();
+            retryCount++;
+        }
     }
 
     private void connectionLost() {
+        if (D) Log.d(TAG, "connectionLost: ");
         Message msg = mHandler.obtainMessage(Constants.MESSAGE_TOAST);
         Bundle bundle = new Bundle();
         msg.setData(bundle);
@@ -131,9 +140,6 @@ public class ConnectionManager {
     }
 
     private class ConnectThread extends Thread {
-
-        private static final String TAG = "ConnectThread";
-        private static final boolean D = false;
 
         private final BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
@@ -185,8 +191,6 @@ public class ConnectionManager {
     }
 
     private class ConnectedThread extends Thread {
-        private static final String TAG = "ConnectedThread";
-        private static final boolean D = false;
 
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;

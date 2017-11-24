@@ -16,6 +16,7 @@ import android.util.Log;
 import com.starapps.buttontest.R;
 import com.starapps.buttontest.connecting.ConnectEvent;
 import com.starapps.buttontest.connecting.ConnectingEvent;
+import com.starapps.buttontest.connecting.DefaultConnectEvent;
 import com.starapps.buttontest.connecting.DisconnectEvent;
 
 import org.greenrobot.eventbus.EventBus;
@@ -90,7 +91,20 @@ public class BluetoothService extends Service {
 
     @Subscribe
     public void onEvent(DisconnectEvent event) {
-        if (isConnected) mBtService.stop();
+        if (isConnected) mBtService.stop(false);
+    }
+
+    @Subscribe
+    public void onEvent(DefaultConnectEvent event) {
+        Log.d(TAG, "onEvent: " + mBtService);
+        if (mBtService == null) {
+            setupConnection();
+        } else {
+            if (!isConnected && mBtService.getState() == ConnectionManager.STATE_NONE) {
+                mBtService.stop(false);
+                mBtService.connect();
+            }
+        }
     }
 
     @Override
@@ -151,7 +165,7 @@ public class BluetoothService extends Service {
 
     private void stopConnection() {
         if (mBtService != null) {
-            mBtService.stop();
+            mBtService.stop(true);
             mBtService = null;
         }
         postStatus(false);

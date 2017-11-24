@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.starapps.buttontest.connecting.DefaultConnectEvent;
 import com.starapps.buttontest.connecting.DisconnectEvent;
 import com.starapps.buttontest.connecting.StartActivity;
 import com.starapps.buttontest.core.BluetoothService;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
+        EventBus.getDefault().post(new DefaultConnectEvent());
         initTime();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mBtAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -125,9 +127,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        EventBus.getDefault().post(new DisconnectEvent());
         EventBus.getDefault().unregister(this);
         QueueManager.getInstance().clearQueue();
-        if (!isMoveNext) stopService(new Intent(this, BluetoothService.class));
+        if (!isMoveNext) {
+            stopService(new Intent(this, BluetoothService.class));
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
     }
 
     @Override

@@ -217,6 +217,7 @@ public class StartActivity extends AppCompatActivity {
     @Subscribe
     public void onEvent(ConnectingEvent event) {
         if (event.isConnecting) {
+            if (mDialog != null && mDialog.isShowing()) return;
             mDialog = ProgressDialog.show(this, getString(R.string.title_connecting),
                     mDeviceName, true, true);
         }
@@ -237,7 +238,10 @@ public class StartActivity extends AppCompatActivity {
         cancelDiscovering();
         this.unregisterReceiver(mReceiver);
         EventBus.getDefault().unregister(this);
-        if (!isMoveForward) stopService(new Intent(this, BluetoothService.class));
+        if (!isMoveForward) {
+            stopService(new Intent(this, BluetoothService.class));
+            android.os.Process.killProcess(android.os.Process.myPid());
+        }
     }
 
     @Override
