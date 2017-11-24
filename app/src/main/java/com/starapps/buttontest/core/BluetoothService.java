@@ -91,7 +91,7 @@ public class BluetoothService extends Service {
 
     @Subscribe
     public void onEvent(DisconnectEvent event) {
-        if (isConnected) mBtService.stop(false);
+        mBtService.stop();
     }
 
     @Subscribe
@@ -101,7 +101,7 @@ public class BluetoothService extends Service {
             setupConnection();
         } else {
             if (!isConnected && mBtService.getState() == ConnectionManager.STATE_NONE) {
-                mBtService.stop(false);
+                mBtService.stop();
                 mBtService.connect();
             }
         }
@@ -165,7 +165,7 @@ public class BluetoothService extends Service {
 
     private void stopConnection() {
         if (mBtService != null) {
-            mBtService.stop(true);
+            mBtService.stop();
             mBtService = null;
         }
         postStatus(false);

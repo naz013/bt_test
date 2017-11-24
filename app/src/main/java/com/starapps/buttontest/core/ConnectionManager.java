@@ -89,19 +89,17 @@ public class ConnectionManager {
         retryCount = 0;
     }
 
-    public synchronized void stop(boolean stopThreads) {
+    public synchronized void stop() {
         if (D) Log.d(TAG, "stop");
-        if (stopThreads) {
-            if (mConnectThread != null) {
-                if (D) Log.d(TAG, "cancel mConnectThread");
-                mConnectThread.cancel();
-                mConnectThread = null;
-            }
-            if (mConnectedThread != null) {
-                if (D) Log.d(TAG, "cancel mConnectedThread");
-                mConnectedThread.cancel();
-                mConnectedThread = null;
-            }
+        if (mConnectThread != null) {
+            if (D) Log.d(TAG, "cancel mConnectThread");
+            mConnectThread.cancel();
+            mConnectThread = null;
+        }
+        if (mConnectedThread != null) {
+            if (D) Log.d(TAG, "cancel mConnectedThread");
+            mConnectedThread.cancel();
+            mConnectedThread = null;
         }
         setState(STATE_NONE);
     }

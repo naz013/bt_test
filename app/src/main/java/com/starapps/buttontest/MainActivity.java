@@ -7,12 +7,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.starapps.buttontest.connecting.DefaultConnectEvent;
 import com.starapps.buttontest.connecting.DisconnectEvent;
@@ -45,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private BluetoothAdapter mBtAdapter;
     private boolean isMoveNext = false;
+    private Handler mUiHandler = new Handler(Looper.getMainLooper());
+
+    private static char[] converter = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,11 +86,32 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.HOUR_OF_DAY, mHour);
             calendar.set(Calendar.MINUTE, mMinute);
             try {
-                QueueManager.getInstance().insert(new QueueItem(HOUR_FORMAT.format(calendar.getTime()).getBytes("UTF-8")));
+                byte[] data = HOUR_FORMAT.format(calendar.getTime()).getBytes("UTF-8");
+                QueueManager.getInstance().insert(new QueueItem(data));
+                showToast(data);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        int size = bytes.length * 3 + 1;
+        char[] hexChars = new char[size];
+        hexChars[0] = ' ';
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 3 + 1] = converter[v >>> 4];
+            hexChars[j * 3 + 2] = converter[v & 0x0F];
+            hexChars[j * 3 + 3] = '-';
+        }
+        hexChars[size - 1] = ' ';
+        return new String(hexChars);
+    }
+
+
+    private void showToast(byte[] data) {
+        mUiHandler.post(() -> Toast.makeText(MainActivity.this, "Send: " + bytesToHex(data), Toast.LENGTH_LONG).show());
     }
 
     private void updateTimeView() {
