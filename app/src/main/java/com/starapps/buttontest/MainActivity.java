@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -39,6 +40,8 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
+
     private static final int REQUEST_ENABLE_BT_AUTO = 16;
     private static final DateFormat HOUR_FORMAT = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
@@ -49,8 +52,6 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter mBtAdapter;
     private boolean isMoveNext = false;
     private Handler mUiHandler = new Handler(Looper.getMainLooper());
-
-    private static char[] converter = new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,30 +88,35 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MINUTE, mMinute);
             try {
                 byte[] data = HOUR_FORMAT.format(calendar.getTime()).getBytes("UTF-8");
-                QueueManager.getInstance().insert(new QueueItem(data));
-                showToast(data);
+                byte[] withExtra = new byte[data.length + 2];
+                System.arraycopy(data, 0, withExtra, 0, data.length);
+                withExtra[withExtra.length - 2] = (byte) 13;
+                withExtra[withExtra.length - 1] = (byte) 10;
+                QueueManager.getInstance().insert(new QueueItem(withExtra));
+                showToast(withExtra);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }).start();
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        int size = bytes.length * 3 + 1;
-        char[] hexChars = new char[size];
-        hexChars[0] = ' ';
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 3 - 1];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
-            hexChars[j * 3 + 1] = converter[v >>> 4];
-            hexChars[j * 3 + 2] = converter[v & 0x0F];
-            hexChars[j * 3 + 3] = '-';
+            hexChars[j * 3] = hexArray[v >>> 4];
+            hexChars[j * 3 + 1] = hexArray[v & 0x0F];
+            if (j < bytes.length - 1) {
+                hexChars[j * 3 + 2] = '-';
+            }
         }
-        hexChars[size - 1] = ' ';
         return new String(hexChars);
     }
 
-
     private void showToast(byte[] data) {
+        Log.d(TAG, "sendTime: " + bytesToHex(data));
         mUiHandler.post(() -> Toast.makeText(MainActivity.this, "Send: " + bytesToHex(data), Toast.LENGTH_LONG).show());
     }
 
