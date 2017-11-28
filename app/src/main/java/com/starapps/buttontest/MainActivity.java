@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showToast(byte[] data) {
         Log.d(TAG, "sendTime: " + bytesToHex(data));
-        mUiHandler.post(() -> Toast.makeText(MainActivity.this, "Send: " + bytesToHex(data), Toast.LENGTH_LONG).show());
+//        mUiHandler.post(() -> Toast.makeText(MainActivity.this, "Send: " + bytesToHex(data), Toast.LENGTH_LONG).show());
     }
 
     private void updateTimeView() {
